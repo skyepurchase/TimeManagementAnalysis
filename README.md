@@ -1,0 +1,2 @@
+# TimeManagementAnalysis
+A python tool to visualise time spent on certain tasks based on Google Calendar data. The visualisation will highlight periods of time in the day where it is optimal for certain types of work, and the application will eventually be able to suggest and schedule incoming events based on past data. The system requires detailed and vigilant Google Calendar time blocking (which I do) so won't be useful for everyone
