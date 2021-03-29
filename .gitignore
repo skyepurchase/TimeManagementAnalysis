@@ -1,4 +1,16 @@
+# Backup and Temp files
+~*
+
+
+# Sensitive Data
 *.json
 *.pickle
-.idea\
+
+# IntelliJ project files
+*.iml
+*.iws
+*.ipr
+.idea/
+
+# Running tests
 main.py
