@@ -1,7 +1,6 @@
 # Backup and Temp files
 ~*
 
-
 # Sensitive Data
 *.json
 *.pickle
