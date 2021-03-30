@@ -13,6 +13,12 @@ from google.auth.transport.requests import Request
 SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 
 
+def stripDatetime(series):
+    start = datetime.datetime.strptime(series['start']['dateTime'], '%Y-%m-%dT%H:%M:%SZ')
+    end = datetime.datetime.strptime(series['end']['dateTime'], '%Y-%m-%dT%H:%M:%SZ')
+    return pd.Series([start, end])
+
+
 class DataAnalyser:
     def __init__(self):
         self.credentials = None
@@ -59,8 +65,9 @@ class DataAnalyser:
                                                    orderBy='startTime').execute()
 
         raw_data = pd.DataFrame.from_dict(events_result.get('items', []))
+        raw_data = raw_data[['start', 'end']]
 
-        return raw_data
+        return raw_data.apply(lambda x: stripDatetime(x), axis=1)
 
     def getDayDate(self, start: datetime):
 
