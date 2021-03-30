@@ -2,9 +2,8 @@ from __future__ import print_function
 import datetime
 import pickle
 import os.path
-from pprint import pprint
 
-import matplotlib.pyplot as plt
+import pandas as pd
 
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -16,9 +15,6 @@ SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 
 class DataAnalyser:
     def __init__(self):
-        """Shows basic usage of the Google Calendar API.
-        Prints the start and name of the next 10 events on the user's calendar.
-        """
         self.credentials = None
         # The file token.pickle stores the user's access and refresh tokens, and is
         # created automatically when the authorization flow completes for the first
@@ -46,6 +42,25 @@ class DataAnalyser:
                               'Menial Tasks': 'c_8sa66nob86sbnni235f5dfk1hg@group.calendar.google.com',
                               'Supervisions': 'c_81fnb8n9bf3hau131nb02p35gc@group.calendar.google.com',
                               'Lectures': 'a77nfv4okg843lato7vm58n3lnv3skan@import.calendar.google.com'}
+
+    def getRawCalendarDay(self, calendar: str, day: datetime):
+        start = day
+        end = day + datetime.timedelta(1)
+
+        if calendar not in self.calendar_info:
+            return None
+
+        ID = self.calendar_info.get(calendar)
+
+        events_result = self.service.events().list(calendarId=ID,
+                                                   timeMin=start.isoformat() + 'Z',
+                                                   timeMax=end.isoformat() + 'Z',
+                                                   singleEvents=True,
+                                                   orderBy='startTime').execute()
+
+        raw_data = pd.DataFrame.from_dict(events_result.get('items', []))
+
+        return raw_data
 
     def getDayDate(self, start: datetime):
 
