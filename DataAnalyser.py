@@ -14,12 +14,20 @@ SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 
 
 def stripDatetime(series):
-    start = datetime.datetime.strptime(series['start']['dateTime'], '%Y-%m-%dT%H:%M:%SZ')
-    end = datetime.datetime.strptime(series['end']['dateTime'], '%Y-%m-%dT%H:%M:%SZ')
+    if "date" in series['start']:
+        start = datetime.datetime.strptime(series['start']['date'], '%Y-%m-%d')
+        end = datetime.datetime.strptime(series['start']['date'], '%Y-%m-%d')
+    else:
+        start = datetime.datetime.strptime(series['start']['dateTime'], '%Y-%m-%dT%H:%M:%SZ')
+        end = datetime.datetime.strptime(series['end']['dateTime'], '%Y-%m-%dT%H:%M:%SZ')
+
     return pd.Series([start, end])
 
 
 def inRange(time_stamp, events):
+    if events is None:
+        return False
+
     test = (events.start <= time_stamp) & (events.end >= time_stamp)
     return test.mean() > 0  # It works so I don't care
 
@@ -70,18 +78,36 @@ class DataAnalyser:
                                                    orderBy='startTime').execute()
 
         raw_data = pd.DataFrame.from_dict(events_result.get('items', []))
+
+        if raw_data.empty:
+            return None
+
         raw_data = raw_data[['start', 'end']]
         raw_data = raw_data.apply(lambda x: stripDatetime(x), axis=1)
 
         return raw_data.rename(columns={0: 'start', 1: 'end'})
 
     def getSplitCalendarDay(self, calendar: str, day: datetime, split=5):
-        raw_data = self.getRawCalendarDay(calendar, day)
-
-        if raw_data is None:
+        if calendar not in self.calendar_info:
             return None
 
+        raw_data = self.getRawCalendarDay(calendar, day)
         time_stamps = pd.date_range(start=day, periods=288, freq=f'{split}T').to_frame()
-        time_stamps = time_stamps.apply(lambda x: 1 if inRange(x[0], raw_data) else 0, axis=1).to_frame()
+        time_stamps = time_stamps.apply(lambda x: 1 if inRange(x[0], raw_data) else 0, axis=1).reset_index()
+        time_stamps.columns = ['Time', calendar]
 
         return time_stamps
+
+    def getDayData(self, day: datetime):
+        data = pd.DataFrame()
+
+        for calendar in self.calendar_info:
+            new_data = self.getSplitCalendarDay(calendar, day)
+
+            if new_data is not None:
+                if data.empty:
+                    data = new_data
+                else:
+                    data = data.merge(new_data, how='left', on='Time')
+
+        return data

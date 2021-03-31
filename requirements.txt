@@ -1,3 +1,4 @@
-pandas
-matplotlib
-sqlalchemy
+pandas~=1.2.2
+matplotlib~=3.3.4
+DateTime~=4.3
+numpy~=1.19.5
