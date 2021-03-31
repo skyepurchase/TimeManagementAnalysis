@@ -19,6 +19,11 @@ def stripDatetime(series):
     return pd.Series([start, end])
 
 
+def inRange(time_stamp, events):
+    test = (events.start <= time_stamp) & (events.end >= time_stamp)
+    return test.mean() > 0  # It works so I don't care
+
+
 class DataAnalyser:
     def __init__(self):
         self.credentials = None
@@ -66,8 +71,20 @@ class DataAnalyser:
 
         raw_data = pd.DataFrame.from_dict(events_result.get('items', []))
         raw_data = raw_data[['start', 'end']]
+        raw_data = raw_data.apply(lambda x: stripDatetime(x), axis=1)
 
-        return raw_data.apply(lambda x: stripDatetime(x), axis=1)
+        return raw_data.rename(columns={0: 'start', 1: 'end'})
+
+    def getSplitCalendarDay(self, calendar: str, day: datetime, split=5):
+        raw_data = self.getRawCalendarDay(calendar, day)
+
+        if raw_data is None:
+            return None
+
+        time_stamps = pd.date_range(start=day, periods=288, freq=f'{split}T').to_frame()
+        time_stamps = time_stamps.apply(lambda x: 1 if inRange(x[0], raw_data) else 0, axis=1).to_frame()
+
+        return time_stamps
 
     def getDayDate(self, start: datetime):
 
