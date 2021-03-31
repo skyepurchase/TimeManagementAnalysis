@@ -119,6 +119,7 @@ class DataAnalyser:
         data = pd.DataFrame()
 
         timestamp = start
+        count = 0
         while timestamp < end:
             new_data = self.getSplitCalendarDay(calendar, timestamp)
             new_data.set_index('Time', inplace=True)
@@ -127,11 +128,13 @@ class DataAnalyser:
                 if data.empty:
                     data = new_data
                 else:
-                    data += new_data
+                    data[calendar] = data[calendar].values + new_data[calendar].values
 
             timestamp += datetime.timedelta(1)
+            count += 1
 
-        data.reset_index()
+        data[calendar] = data[calendar] / count
+        data = data.reset_index()
         data.columns = ['Time', calendar]
 
         return data
