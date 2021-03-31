@@ -12,4 +12,5 @@
 .idea/
 
 # Running tests
+tests.py
 main.py
