@@ -111,3 +111,24 @@ class DataAnalyser:
                     data = data.merge(new_data, how='left', on='Time')
 
         return data
+
+    def getCalendarDensity(self, calendar: str, start: datetime, end: datetime):
+        if calendar not in self.calendar_info:
+            return None
+
+        data = pd.DataFrame()
+
+        timestamp = start
+        while timestamp < end:
+            new_data = self.getSplitCalendarDay(calendar, timestamp)
+            new_data.set_index('Time', inplace=True)
+
+            if new_data is not None:
+                if data.empty:
+                    data = new_data
+                else:
+                    data += new_data
+
+            timestamp += datetime.timedelta(1)
+
+        return data
