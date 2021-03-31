@@ -131,4 +131,7 @@ class DataAnalyser:
 
             timestamp += datetime.timedelta(1)
 
+        data.reset_index()
+        data.columns = ['Time', calendar]
+
         return data
