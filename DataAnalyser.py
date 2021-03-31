@@ -18,8 +18,8 @@ def stripDatetime(series):
         start = datetime.datetime.strptime(series['start']['date'], '%Y-%m-%d')
         end = datetime.datetime.strptime(series['start']['date'], '%Y-%m-%d')
     else:
-        start = datetime.datetime.strptime(series['start']['dateTime'], '%Y-%m-%dT%H:%M:%SZ')
-        end = datetime.datetime.strptime(series['end']['dateTime'], '%Y-%m-%dT%H:%M:%SZ')
+        start = datetime.datetime.strptime(series['start']['dateTime'][:19], '%Y-%m-%dT%H:%M:%S')
+        end = datetime.datetime.strptime(series['end']['dateTime'][:19], '%Y-%m-%dT%H:%M:%S')
 
     return pd.Series([start, end])
 
