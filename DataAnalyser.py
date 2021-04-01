@@ -95,8 +95,8 @@ class DataAnalyser:
 
         raw_data = self.getRawCalendarData(calendar, start, end)
         time_stamps = pd.date_range(start=start, periods=288, freq=f'{split}T').strftime('%H:%M:%S').to_frame()
-        time_stamps = time_stamps.apply(lambda x: inRange(x, raw_data), axis=1)
-        time_stamps.columns = [calendar]
+        time_stamps = time_stamps.apply(lambda x: inRange(x, raw_data), axis=1).reset_index()
+        time_stamps.columns = ['Time', calendar]
 
         return time_stamps
 
