@@ -62,10 +62,7 @@ class DataAnalyser:
                               'Supervisions': 'c_81fnb8n9bf3hau131nb02p35gc@group.calendar.google.com',
                               'Lectures': 'a77nfv4okg843lato7vm58n3lnv3skan@import.calendar.google.com'}
 
-    def getRawCalendarDay(self, calendar: str, day: datetime):
-        start = day
-        end = day + datetime.timedelta(1)
-
+    def getRawCalendarData(self, calendar: str, start: datetime, end: datetime):
         if calendar not in self.calendar_info:
             return None
 
@@ -87,12 +84,12 @@ class DataAnalyser:
 
         return raw_data.rename(columns={0: 'start', 1: 'end'})
 
-    def getSplitCalendarDay(self, calendar: str, day: datetime, split=5):
+    def getSplitCalendarData(self, calendar: str, start: datetime, end: datetime, split=5):
         if calendar not in self.calendar_info:
             return None
 
-        raw_data = self.getRawCalendarDay(calendar, day)
-        time_stamps = pd.date_range(start=day, periods=288, freq=f'{split}T').to_frame()
+        raw_data = self.getRawCalendarData(calendar, start, end)
+        time_stamps = pd.date_range(start=start, periods=288, freq=f'{split}T').to_frame()
         time_stamps = time_stamps.apply(lambda x: 1 if inRange(x[0], raw_data) else 0, axis=1).reset_index()
         time_stamps.columns = ['Time', calendar]
 
@@ -102,7 +99,7 @@ class DataAnalyser:
         data = pd.DataFrame()
 
         for calendar in self.calendar_info:
-            new_data = self.getSplitCalendarDay(calendar, day)
+            new_data = self.getSplitCalendarData(calendar, day, day + datetime.timedelta(1))
 
             if new_data is not None:
                 if data.empty:
@@ -121,7 +118,7 @@ class DataAnalyser:
         timestamp = start
         count = 0
         while timestamp < end:
-            new_data = self.getSplitCalendarDay(calendar, timestamp)
+            new_data = self.getSplitCalendarData(calendar, timestamp, timestamp + datetime.timedelta(1))
             new_data.set_index('Time', inplace=True)
 
             if new_data is not None:
