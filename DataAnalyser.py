@@ -27,7 +27,7 @@ def stripDatetime(series):
 
 def inRange(time_stamp, events):
     if events is None:
-        return pd.Series(np.zeros(1, dtype=int))
+        return pd.Series(np.zeros(1, dtype=np.int64))
 
     time = datetime.datetime.strptime(time_stamp[0], "%H:%M:%S").time()
 
