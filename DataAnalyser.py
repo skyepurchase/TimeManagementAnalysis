@@ -124,7 +124,5 @@ class DataAnalyser:
         days = time_difference.days
 
         data[calendar] = data[calendar] / days
-        data = data.reset_index()
-        data.columns = ['Time', calendar]
 
         return data
