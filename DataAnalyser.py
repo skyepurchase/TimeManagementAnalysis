@@ -27,14 +27,14 @@ def stripDatetime(series):
 
 def inRange(time_stamp, events):
     if events is None:
-        return False
+        return pd.Series(np.zeros(1, dtype=int))
 
     time = datetime.datetime.strptime(time_stamp[0], "%H:%M:%S").time()
 
     occurrences = (events.start <= time) & (events.end > time)
     count = np.count_nonzero(np.array(occurrences.values))
 
-    return pd.Series([time, count])
+    return pd.Series([count])
 
 
 class DataAnalyser:
@@ -95,8 +95,8 @@ class DataAnalyser:
 
         raw_data = self.getRawCalendarData(calendar, start, end)
         time_stamps = pd.date_range(start=start, periods=288, freq=f'{split}T').strftime('%H:%M:%S').to_frame()
-        time_stamps = time_stamps.apply(lambda x: inRange(x, raw_data), axis=1).reset_index()
-        time_stamps.columns = ['Time', calendar]
+        time_stamps = time_stamps.apply(lambda x: inRange(x, raw_data), axis=1)
+        time_stamps.columns = [calendar]
 
         return time_stamps
 
