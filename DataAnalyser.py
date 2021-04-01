@@ -16,8 +16,8 @@ SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 
 def stripDatetime(series):
     if "date" in series['start']:
-        start = datetime.datetime.strptime(series['start']['date'], '%Y-%m-%d')
-        end = datetime.datetime.strptime(series['start']['date'], '%Y-%m-%d')
+        start = datetime.datetime.strptime(series['start']['date'], '%Y-%m-%d').time()
+        end = datetime.datetime.strptime(series['start']['date'], '%Y-%m-%d').time()
     else:
         start = datetime.datetime.strptime(series['start']['dateTime'][:19], '%Y-%m-%dT%H:%M:%S').time()
         end = datetime.datetime.strptime(series['end']['dateTime'][:19], '%Y-%m-%dT%H:%M:%S').time()
@@ -118,24 +118,12 @@ class DataAnalyser:
         if calendar not in self.calendar_info:
             return None
 
-        data = pd.DataFrame()
+        data = self.getSplitCalendarData(calendar, start, end)
 
-        timestamp = start
-        count = 0
-        while timestamp < end:
-            new_data = self.getSplitCalendarData(calendar, timestamp, timestamp + datetime.timedelta(1))
-            new_data.set_index('Time', inplace=True)
+        time_difference = end - start
+        days = time_difference.days
 
-            if new_data is not None:
-                if data.empty:
-                    data = new_data
-                else:
-                    data[calendar] = data[calendar].values + new_data[calendar].values
-
-            timestamp += datetime.timedelta(1)
-            count += 1
-
-        data[calendar] = data[calendar] / count
+        data[calendar] = data[calendar] / days
         data = data.reset_index()
         data.columns = ['Time', calendar]
 
