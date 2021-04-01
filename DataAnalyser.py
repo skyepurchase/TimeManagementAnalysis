@@ -4,6 +4,7 @@ import pickle
 import os.path
 
 import pandas as pd
+import numpy as np
 
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -18,8 +19,8 @@ def stripDatetime(series):
         start = datetime.datetime.strptime(series['start']['date'], '%Y-%m-%d')
         end = datetime.datetime.strptime(series['start']['date'], '%Y-%m-%d')
     else:
-        start = datetime.datetime.strptime(series['start']['dateTime'][:19], '%Y-%m-%dT%H:%M:%S')
-        end = datetime.datetime.strptime(series['end']['dateTime'][:19], '%Y-%m-%dT%H:%M:%S')
+        start = datetime.datetime.strptime(series['start']['dateTime'][:19], '%Y-%m-%dT%H:%M:%S').time()
+        end = datetime.datetime.strptime(series['end']['dateTime'][:19], '%Y-%m-%dT%H:%M:%S').time()
 
     return pd.Series([start, end])
 
@@ -28,8 +29,12 @@ def inRange(time_stamp, events):
     if events is None:
         return False
 
-    test = (events.start <= time_stamp) & (events.end >= time_stamp)
-    return test.mean() > 0  # It works so I don't care
+    time = datetime.datetime.strptime(time_stamp[0], "%H:%M:%S").time()
+
+    occurrences = (events.start <= time) & (events.end > time)
+    count = np.count_nonzero(np.array(occurrences.values))
+
+    return pd.Series([time, count])
 
 
 class DataAnalyser:
@@ -89,8 +94,8 @@ class DataAnalyser:
             return None
 
         raw_data = self.getRawCalendarData(calendar, start, end)
-        time_stamps = pd.date_range(start=start, periods=288, freq=f'{split}T').to_frame()
-        time_stamps = time_stamps.apply(lambda x: 1 if inRange(x[0], raw_data) else 0, axis=1).reset_index()
+        time_stamps = pd.date_range(start=start, periods=288, freq=f'{split}T').strftime('%H:%M:%S').to_frame()
+        time_stamps = time_stamps.apply(lambda x: inRange(x, raw_data), axis=1).reset_index()
         time_stamps.columns = ['Time', calendar]
 
         return time_stamps
